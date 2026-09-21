@@ -422,33 +422,9 @@ canvas {
   min-height: 460px;
 }
 
+/* The scene is display-only: let touch gestures scroll the page normally */
 .hero-canvas canvas {
-  touch-action: none;
-}
-
-.hero-hint {
-  position: absolute;
-  left: 50%;
-  bottom: 8px;
-  transform: translateX(-50%);
-  font-size: 12px;
-  letter-spacing: 0.16em;
-  text-transform: uppercase;
-  color: rgba(246, 220, 174, 0.45);
-  display: flex;
-  align-items: center;
-  gap: 10px;
-  white-space: nowrap;
-}
-
-.hero-hint svg {
-  animation: spin 6s linear infinite;
-}
-
-@keyframes spin {
-  to {
-    transform: rotate(360deg);
-  }
+  touch-action: pan-y;
 }
 
 .hero-scroll {
@@ -1392,7 +1368,6 @@ canvas {
   }
 
   .marquee-track,
-  .hero-hint svg,
   .hero-scroll::after,
   .nrow .bar i {
     animation: none;

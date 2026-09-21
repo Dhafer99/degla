@@ -1,6 +1,6 @@
 import { lazy, Suspense } from 'react'
 import { motion } from 'framer-motion'
-import { Arrow, Rotate } from './Icons'
+import { Arrow } from './Icons'
 
 // Three.js is heavy — load the 3D scene after the rest of the page has painted
 const Date3D = lazy(() => import('./Date3D'))
@@ -68,9 +68,6 @@ export default function Hero() {
           <Suspense fallback={null}>
             <Date3D />
           </Suspense>
-          <span className="hero-hint">
-            <Rotate /> Faites glisser pour tourner
-          </span>
         </motion.div>
       </div>
 

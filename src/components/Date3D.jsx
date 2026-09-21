@@ -5,7 +5,6 @@ import {
   Environment,
   Float,
   Lightformer,
-  OrbitControls,
   Sparkles,
 } from '@react-three/drei'
 import * as THREE from 'three'
@@ -209,14 +208,6 @@ function Scene() {
       <Sparkles count={70} scale={[7, 7, 4]} size={2.2} speed={0.35} opacity={0.5} color="#f2c27a" />
 
       <ContactShadows position={[0, -2.6, 0]} opacity={0.55} scale={12} blur={2.6} far={4} color="#0b0402" />
-
-      <OrbitControls
-        enableZoom={false}
-        enablePan={false}
-        minPolarAngle={Math.PI / 2.6}
-        maxPolarAngle={Math.PI / 1.6}
-        rotateSpeed={0.6}
-      />
     </>
   )
 }
