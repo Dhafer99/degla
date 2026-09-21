@@ -1,12 +1,6 @@
 import { Suspense, useMemo, useRef } from 'react'
 import { Canvas, useFrame } from '@react-three/fiber'
-import {
-  ContactShadows,
-  Environment,
-  Float,
-  Lightformer,
-  Sparkles,
-} from '@react-three/drei'
+import { Environment, Float, Lightformer, Sparkles } from '@react-three/drei'
 import * as THREE from 'three'
 import { mergeVertices } from 'three/examples/jsm/utils/BufferGeometryUtils.js'
 import { createNoise3D, fbm } from '../lib/noise'
@@ -18,6 +12,36 @@ const smoothstep = (a, b, v) => {
 }
 
 /**
+ * Soft drop shadow under the floating fruit.
+ * A camera-facing plane with a radial gradient: unlike a floor plane it
+ * fades to fully transparent well inside the canvas, so it can't get
+ * clipped into a hard edge on short (mobile) canvases.
+ */
+function SoftShadow({ position = [0, -2.55, 0], width = 3.2, height = 0.7, opacity = 0.6 }) {
+  const texture = useMemo(() => {
+    const size = 256
+    const canvas = document.createElement('canvas')
+    canvas.width = size
+    canvas.height = size
+    const ctx = canvas.getContext('2d')
+    const grad = ctx.createRadialGradient(size / 2, size / 2, 0, size / 2, size / 2, size / 2)
+    grad.addColorStop(0, 'rgba(8, 3, 1, 1)')
+    grad.addColorStop(0.45, 'rgba(8, 3, 1, 0.55)')
+    grad.addColorStop(1, 'rgba(8, 3, 1, 0)')
+    ctx.fillStyle = grad
+    ctx.fillRect(0, 0, size, size)
+    const tex = new THREE.CanvasTexture(canvas)
+    tex.colorSpace = THREE.SRGBColorSpace
+    return tex
+  }, [])
+
+  return (
+    <mesh position={position} renderOrder={-1}>
+      <planeGeometry args={[width, height]} />
+      <meshBasicMaterial map={texture} transparent opacity={opacity} depthWrite={false} />
+    </mesh>
+  )
+}
 
 /**
  * Builds a Deglet Nour date from a seamless icosphere.
@@ -146,9 +170,9 @@ function DateFruit() {
 
   // Nearly upright, leaning slightly, so the full length reads
   return (
-    <group ref={tilt} rotation={[0.12, -0.2, -0.3]} scale={1.0}>
+    <group ref={tilt} rotation={[0.12, -0.2, -0.3]} scale={0.92}>
       <group ref={spin}>
-        <mesh geometry={geometry} castShadow receiveShadow>
+        <mesh geometry={geometry}>
           <meshPhysicalMaterial
             vertexColors
             color="#ffffff"
@@ -188,15 +212,7 @@ function Scene() {
     <>
       {/* Key, fill and rim lights tuned to warm honey tones */}
       <ambientLight intensity={0.3} color="#f6dcae" />
-      <spotLight
-        position={[5, 8, 6]}
-        angle={0.4}
-        penumbra={0.8}
-        intensity={110}
-        color="#fff1d6"
-        castShadow
-        shadow-mapSize={[1024, 1024]}
-      />
+      <spotLight position={[5, 8, 6]} angle={0.4} penumbra={0.8} intensity={110} color="#fff1d6" />
       <pointLight position={[-6, -2, 4]} intensity={22} color="#f0a24f" />
       <pointLight position={[0, -5, -6]} intensity={40} color="#ffb060" />
 
@@ -227,7 +243,7 @@ function Scene() {
 
       <Sparkles count={70} scale={[7, 7, 4]} size={2.2} speed={0.35} opacity={0.5} color="#f2c27a" />
 
-      <ContactShadows position={[0, -2.6, 0]} opacity={0.55} scale={12} blur={2.6} far={4} color="#0b0402" />
+      <SoftShadow />
     </>
   )
 }
@@ -235,10 +251,9 @@ function Scene() {
 export default function Date3D() {
   return (
     <Canvas
-      camera={{ position: [0, 0.2, 9.6], fov: 32 }}
+      camera={{ position: [0, 0, 9.6], fov: 32 }}
       dpr={[1, 1.8]}
       gl={{ alpha: true, antialias: true, toneMapping: THREE.ACESFilmicToneMapping }}
-      shadows
       style={{ background: 'transparent' }}
     >
       <Suspense fallback={null}>
