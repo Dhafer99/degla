@@ -56,10 +56,10 @@ function useDateGeometry() {
       const { x, y, z } = v // unit sphere
       const ang = Math.atan2(z, x)
 
-      // --- Stem end (y > 0): wrinkles gather towards a tiny flat cap -------
+      // --- Stem end (y > 0): a blunt, rounded shoulder with a small cap -----
       const dStem = y > 0 ? Math.sqrt(x * x + z * z) : 1
-      const cap = smoothstep(0.16, 0.05, dStem) // flat spot under the cap
-      const gather = smoothstep(0.7, 0.2, dStem) // wrinkles converge here
+      const cap = smoothstep(0.2, 0.08, dStem) // flat spot under the cap
+      const shoulder = smoothstep(0.85, 0.25, dStem) // the smooth dome around it
 
       // --- Gentle asymmetry so the silhouette isn't a perfect ellipsoid ----
       const lump = fbm(noise, x * 1.2 + 3.1, y * 0.7, z * 1.2, 2) * 0.035
@@ -83,13 +83,16 @@ function useDateGeometry() {
       // --- Fine grain ------------------------------------------------------
       const grain = noise(x * 20, y * 20, z * 20) * 0.001
 
-      // Creases deepen as they gather towards the stem, vanish under the cap
-      const creaseDepth = (crease1 * 0.075 + crease2 * 0.012) * fade * (1 + gather * 0.4) * (1 - cap)
-      const r = 1 + lump - creaseDepth + grain - cap * 0.05
+      // Creases soften into a few shallow folds on the shoulder, vanish under the cap
+      const creaseDepth = (crease1 * 0.075 + crease2 * 0.012) * fade * (1 - shoulder * 0.75) * (1 - cap)
+      const r = 1 + lump - creaseDepth + grain - cap * 0.03
 
-      // Slim, long body: rounder at the base, tapering towards the stem
-      const taper = 1 - 0.16 * Math.max(0, y) ** 2 - 0.05 * Math.max(0, -y) ** 3
-      v.set(x * r * taper, y * r * 2.35, z * r * taper * 0.94)
+      // Slim, long body: rounder at the base, broad and blunt at the stem end
+      const yTop = Math.max(0, y)
+      const taper = 1 - 0.05 * yTop ** 3 - 0.05 * Math.max(0, -y) ** 3
+      // squash the top pole a little so the end is a dome rather than a point
+      const blunt = 1 - 0.09 * smoothstep(0.55, 1, yTop)
+      v.set(x * r * taper, y * r * 2.35 * blunt, z * r * taper * 0.94)
       pos.setXYZ(i, v.x, v.y, v.z)
       if (dStem < poleDist) {
         poleDist = dStem
@@ -110,7 +113,9 @@ function useDateGeometry() {
       // crease bottoms go dark
       col.lerp(cCrease, clamp01(crease1 * 0.9 + crease2 * 0.35) * 0.6)
       // dry, lighter skin under the cap
-      col.lerp(cPale, cap * 0.4)
+      col.lerp(cPale, cap * 0.3)
+      // the shoulder is smooth glossy skin: fewer pale patches, warmer tone
+      col.lerp(cBase, shoulder * 0.35)
 
       colors[i * 3] = col.r
       colors[i * 3 + 1] = col.g
@@ -166,8 +171,8 @@ function DateFruit() {
 
         {/* Small flat calyx cap where the stem was attached */}
         <mesh position={[pole.x, pole.y + 0.02, pole.z]}>
-          <cylinderGeometry args={[0.1, 0.13, 0.07, 18]} />
-          <meshStandardMaterial color="#b8925e" roughness={0.9} />
+          <cylinderGeometry args={[0.11, 0.15, 0.07, 18]} />
+          <meshStandardMaterial color="#d4b27c" roughness={0.9} />
         </mesh>
         <mesh position={[pole.x, pole.y + 0.075, pole.z]}>
           <cylinderGeometry args={[0.04, 0.055, 0.05, 12]} />
